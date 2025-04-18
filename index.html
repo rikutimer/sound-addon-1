@@ -29,6 +29,16 @@
             align-items: center;
             justify-content: center;
         }
+    .packname {
+            width: 250px;
+        }
+    .setsumei {
+            width: 500px;
+            height: 200px;
+        }
+    .iconshitei {
+            font-size: 10px;
+        }
   </style>
 </head>
 <body>
@@ -41,6 +51,9 @@
   </div>
   <label>アイコン画像をアップロード: <input type="file" id="iconUpload" accept="image/png" /></label><br/>
   <label><input type="checkbox" id="useDefaultIcon" checked /> デフォルトアイコンを使う</label>
+  <div class="iconshitei">
+    (カスタムアイコンを使う場合にはOFFに)
+  </div>
   
   <h2>音声アップロード（s1〜s20）</h2>
   <div id="audioInputs"></div>
