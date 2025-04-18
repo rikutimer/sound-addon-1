@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mcpack作成サイト</title>
+  <title>効果音アドオン作成サイト</title>
   <link rel="icon" href="https://i.imgur.com/QjfG6yZ.png" />
   <style>
     body {
@@ -23,10 +23,21 @@
       margin-top: 20px;
       cursor: pointer;
     }
+    .footer {
+            width: 100vw;
+            min-height: 400px;
+            background: url('https://i.imgur.com/UQET95Z.jpeg') no-repeat center center/cover;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 40px 20px;
+        }
   </style>
 </head>
 <body>
-  <h1>mcpack作成サイト</h1>
+  <h1>効果音アドオン作成サイト</h1>
   <label>パック名: <input type="text" id="packName" placeholder="例: MyAddon" /></label><br/>
   <label>説明: <input type="text" id="description" placeholder="例: サウンド付きリソースパック" /></label><br/>
   <label>アイコン画像をアップロード: <input type="file" id="iconUpload" accept="image/png" /></label><br/>
@@ -37,7 +48,16 @@
   
   <button onclick="createMcpack()">mcpack生成</button>
 
-  <h3>このサイトで作成したアドオンは「/playsound (s1~s20) @a」で発動させることができます。</h3>
+  
+  <div class="footer">
+        <div class="footer_links">
+          <h3>このサイトで作成したアドオンは「/playsound (s1~s20) @a」で発動させることができます。</h3>
+            <h5>Created by @32Pdesu</h5>
+            <a href="https://x.com/TanukiYy" target="_blank">X(旧Twitter)</a>
+        　
+            <a href="https://sugis-clan.github.io/SUGIs-Clan/wait.html">YouTube</a>
+        </div>
+    </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script>
