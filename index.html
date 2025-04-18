@@ -29,10 +29,10 @@
             align-items: center;
             justify-content: center;
         }
-    .packname {
+    .packname_box {
             width: 250px;
         }
-    .setsumei {
+    .setsumei_box {
             width: 500px;
             height: 200px;
         }
@@ -44,10 +44,10 @@
 <body>
   <h1>効果音アドオン作成サイト</h1>
   <div class="packname">
-    <label>パック名: <input type="text" id="packName" placeholder="例: MyAddon" /></label><br/>
+    <label>パック名: <div class="packname_box"> <input type="text" id="packName" placeholder="例: MyAddon" /> </div> </label><br/>
   </div>
   <div class="setsumei">
-    <label>説明: <input type="text" id="description" placeholder="例: サウンド付きリソースパック" /></label><br/>
+    <label>説明: <div class="setsumei_box"> <input type="text" id="description" placeholder="例: サウンド付きリソースパック" /> </div> </label><br/>
   </div>
   <label>アイコン画像をアップロード: <input type="file" id="iconUpload" accept="image/png" /></label><br/>
   <label><input type="checkbox" id="useDefaultIcon" checked /> デフォルトアイコンを使う</label>
