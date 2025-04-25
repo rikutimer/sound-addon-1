@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>効果音アドオン作成サイト</title>
   <link rel="icon" href="https://i.imgur.com/QjfG6yZ.png" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -24,21 +26,21 @@
       cursor: pointer;
     }
     .footer {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-        }
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
     #packName {
-            width: 250px;
-        }
+      width: 250px;
+    }
     #description {
-            width: 500px;
-            height: 200px;
-        }
+      width: 500px;
+      height: 200px;
+    }
     .iconshitei {
-            font-size: 10px;
-        }
+      font-size: 10px;
+    }
   </style>
 </head>
 <body>
@@ -51,31 +53,28 @@
   </div>
   <label>アイコン画像をアップロード: <input type="file" id="iconUpload" accept="image/png" /></label><br/>
   <label><input type="checkbox" id="useDefaultIcon" checked /> デフォルトアイコンを使う</label>
-  <div class="iconshitei">
-    (カスタムアイコンを使う場合にはOFFに)
-  </div>
+  <div class="iconshitei">(カスタムアイコンを使う場合にはOFFに)</div>
   
-  <h2>音声アップロード（s1〜s20）</h2>
+  <h2>音声アップロード（s1〜s50）</h2>
   <div id="audioInputs"></div>
-  
+
   <button onclick="createMcpack()">mcpack生成</button>
 
-  
   <div class="footer">
-        <div class="footer_links">
-          <h1>このサイトで作成したアドオンは「/playsound (s1~s20) @a」で発動させることができます。</h1>
-            <h2>Created by @Yytanuki</h2>
-            <a href="https://x.com/TanukiYy" target="_blank">X(旧Twitter)</a>
-        　
-            <a href="https://www.youtube.com/@yytanuki" target="_blank">YouTube</a>
-        </div>
+    <div class="footer_links">
+      <h1>このサイトで作成したアドオンは「/playsound (s1~s50) @a」で発動させることができます。</h1>
+      <h2>Created by @Yytanuki</h2>
+      <a href="https://x.com/TanukiYy" target="_blank">X(旧Twitter)</a>
+      <a href="https://www.youtube.com/@yytanuki" target="_blank">YouTube</a>
     </div>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script>
     const trackFiles = {};
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: false });
 
-    for (let i = 1; i <= 20; i++) {
+    for (let i = 1; i <= 50; i++) {
       const container = document.getElementById("audioInputs");
       const label = document.createElement("label");
       label.innerText = `音源 s${i}: `;
@@ -90,24 +89,43 @@
       container.appendChild(document.createElement("br"));
     }
 
-    function handleAudioUpload(event) {
+    async function handleAudioUpload(event) {
       const file = event.target.files[0];
       const index = event.target.dataset.index;
       if (!file) return;
-      const extension = file.name.split('.').pop().toLowerCase();
-      if (!["mp3", "ogg"].includes(extension)) {
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!["mp3", "ogg"].includes(ext)) {
         alert("対応形式は .mp3 または .ogg のみです。");
         return;
       }
-      const newFileName = `s${index}.${extension}`;
-      const reader = new FileReader();
-      reader.onload = function(e) {
+
+      if (ext === "mp3") {
+        if (!ffmpeg.isLoaded()) {
+          await ffmpeg.load();
+        }
+        const mp3Name = `s${index}.mp3`;
+        const oggName = `s${index}.ogg`;
+
+        ffmpeg.FS('writeFile', mp3Name, await fetchFile(file));
+        await ffmpeg.run('-i', mp3Name, '-c:a', 'libvorbis', oggName);
+        const data = ffmpeg.FS('readFile', oggName);
         trackFiles[`s${index}`] = {
-          name: newFileName,
-          data: e.target.result
+          name: `s${index}.ogg`,
+          data: data.buffer
         };
-      };
-      reader.readAsArrayBuffer(file);
+        ffmpeg.FS('unlink', mp3Name);
+        ffmpeg.FS('unlink', oggName);
+      } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          trackFiles[`s${index}`] = {
+            name: `s${index}.ogg`,
+            data: e.target.result
+          };
+        };
+        reader.readAsArrayBuffer(file);
+      }
     }
 
     function createMcpack() {
@@ -115,7 +133,6 @@
       const description = document.getElementById("description").value.trim() || "Generated mcpack";
       const zip = new JSZip();
 
-      // manifest.json
       const manifest = {
         format_version: 2,
         header: {
@@ -134,7 +151,6 @@
       };
       zip.file("manifest.json", JSON.stringify(manifest, null, 2));
 
-      // アイコン
       const useDefaultIcon = document.getElementById("useDefaultIcon").checked;
       const iconUpload = document.getElementById("iconUpload").files[0];
       if (!useDefaultIcon && iconUpload) {
@@ -145,7 +161,6 @@
         };
         reader.readAsArrayBuffer(iconUpload);
       } else {
-        // fetchデフォルトアイコン
         fetch("https://i.imgur.com/QjfG6yZ.png")
           .then(res => res.arrayBuffer())
           .then(data => {
@@ -159,7 +174,7 @@
       const sounds = {};
       const trackFolder = zip.folder("sounds").folder("track");
 
-      for (let i = 1; i <= 20; i++) {
+      for (let i = 1; i <= 50; i++) {
         const key = `s${i}`;
         if (trackFiles[key]) {
           trackFolder.file(trackFiles[key].name, trackFiles[key].data);
