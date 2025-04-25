@@ -110,10 +110,13 @@
         ffmpeg.FS('writeFile', mp3Name, await fetchFile(file));
         await ffmpeg.run('-i', mp3Name, '-c:a', 'libvorbis', oggName);
         const data = ffmpeg.FS('readFile', oggName);
+        const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+
         trackFiles[`s${index}`] = {
           name: `s${index}.ogg`,
-          data: data.buffer
+          data: arrayBuffer
         };
+
         ffmpeg.FS('unlink', mp3Name);
         ffmpeg.FS('unlink', oggName);
       } else {
