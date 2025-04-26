@@ -8,14 +8,37 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
-    h1 { color: #333; }
+    body {
+       font-family: sans-serif;
+       padding: 20px;
+       background-color: #f4f4f4;
+         }
+    h1 {
+       color: #333;
+       }
     input[type="text"], input[type="file"] { margin-bottom: 10px; }
-    button { padding: 10px 20px; font-size: 16px; margin-top: 20px; cursor: pointer; }
-    .footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; }
-    #packName { width: 250px; }
-    #description { width: 500px; height: 200px; }
-    .iconshitei { font-size: 10px; }
+    button {
+       padding: 10px 20px;
+       font-size: 16px;
+       margin-top: 20px;
+       cursor: pointer;
+       }
+    .footer {
+       display: flex;
+       flex-wrap: wrap;
+       align-items: center;
+       justify-content: center;
+       }
+    #packName {
+       width: 250px;
+       }
+    #description {
+       width: 500px;
+       height: 200px;
+       }
+    .iconshitei {
+       font-size: 10px;
+       }
   </style>
 </head>
 <body>
@@ -55,7 +78,7 @@
       const label = document.createElement("label");
       label.innerText = `音源 s${i}: `;
       const input = document.createElement("input");
-      input.type = "file"; // ファイル形式の制限を解除
+      input.type = "file";
       input.id = `audio${i}`;
       input.dataset.index = i;
       input.addEventListener("change", handleAudioUpload);
@@ -111,7 +134,8 @@
           name: packName,
           description: description,
           uuid: crypto.randomUUID(),
-          version: [1, 0, 0]
+          version: [1, 0, 0],
+          min_engine_version: [1, 21, 0] // ★ 追加された項目
         },
         modules: [
           {
