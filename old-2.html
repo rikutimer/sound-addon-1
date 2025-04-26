@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>効果音アドオン作成サイト(旧)</title>
+  <link rel="icon" href="https://i.imgur.com/QjfG6yZ.png" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+    }
+    input[type="text"], input[type="file"] {
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    .footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    #packName {
+      width: 250px;
+    }
+    #description {
+      width: 500px;
+      height: 200px;
+    }
+    .iconshitei {
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>効果音アドオン作成サイト(旧)</h1>
+  <div class="packname">
+    <label>パック名: <div class="packname_box"> <input type="text" id="packName" placeholder="例: MyAddon" /> </div> </label><br/>
+  </div>
+  <div class="setsumei">
+    <label>説明: <div class="setsumei_box"> <input type="text" id="description" placeholder="例: サウンド付きリソースパック" /> </div> </label><br/>
+  </div>
+  <label>アイコン画像をアップロード: <input type="file" id="iconUpload" accept="image/png" /></label><br/>
+  <label><input type="checkbox" id="useDefaultIcon" checked /> デフォルトアイコンを使う</label>
+  <div class="iconshitei">
+    (カスタムアイコンを使う場合にはOFFに)
+  </div>
+
+  <h2>音声アップロード（s1〜s20）</h2>
+  <div id="audioInputs"></div>
+
+  <button onclick="createMcpack()">mcpack生成</button>
+
+  <div class="footer">
+    <div class="footer_links">
+      <h3>このサイトで作成したアドオンは「/playsound (s1~s20) @a」で発動させることができます。</h3>
+      <h5>Created by @32Pdesu</h5>
+      <h1>このサイトで作成したアドオンは「/playsound (s1~s20) @a」で発動させることができます。</h1>
+      <h2>Created by @Yytanuki</h2>
+      <a href="https://x.com/TanukiYy" target="_blank">X(旧Twitter)</a>
+      <a href="https://www.youtube.com/@yytanuki" target="_blank">YouTube</a>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script>
+    const trackFiles = {};
+
+    for (let i = 1; i <= 20; i++) {
+      const container = document.getElementById("audioInputs");
+      const label = document.createElement("label");
+      label.innerText = `音源 s${i}: `;
+      const input = document.createElement("input");
+      input.type = "file";
+      input.id = `audio${i}`;
+      input.dataset.index = i;
+      input.addEventListener("change", handleAudioUpload);
+      container.appendChild(label);
+      container.appendChild(input);
+      container.appendChild(document.createElement("br"));
+    }
+
+    function handleAudioUpload(event) {
+      const file = event.target.files[0];
+      const index = event.target.dataset.index;
+      if (!file) return;
+      const extension = file.name.split('.').pop().toLowerCase();
+      const newFileName = `s${index}.${extension}`;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        trackFiles[`s${index}`] = {
+          name: newFileName,
+          data: e.target.result
+        };
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function createMcpack() {
+      const packName = document.getElementById("packName").value.trim() || "MyAddon";
+      const description = document.getElementById("description").value.trim() || "Generated mcpack";
+      const zip = new JSZip();
+
+      const manifest = {
+        format_version: 2,
+        header: {
+          name: packName,
+          description: description,
+          uuid: crypto.randomUUID(),
+          version: [1, 0, 0]
+        },
+        modules: [
+          {
+            type: "resources",
+            uuid: crypto.randomUUID(),
+            version: [1, 0, 0]
+          }
+        ]
+      };
+      zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+      const useDefaultIcon = document.getElementById("useDefaultIcon").checked;
+      const iconUpload = document.getElementById("iconUpload").files[0];
+      if (!useDefaultIcon && iconUpload) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          zip.file("pack_icon.png", e.target.result);
+          addSoundFilesAndGenerate(zip, packName);
+        };
+        reader.readAsArrayBuffer(iconUpload);
+      } else {
+        fetch("https://i.imgur.com/QjfG6yZ.png")
+          .then(res => res.arrayBuffer())
+          .then(data => {
+            zip.file("pack_icon.png", data);
+            addSoundFilesAndGenerate(zip, packName);
+          });
+      }
+    }
+
+    function addSoundFilesAndGenerate(zip, packName) {
+      const sounds = {};
+      const trackFolder = zip.folder("sounds").folder("track");
+
+      for (let i = 1; i <= 20; i++) {
+        const key = `s${i}`;
+        if (trackFiles[key]) {
+          trackFolder.file(trackFiles[key].name, trackFiles[key].data);
+          sounds[key] = {
+            max_distance: 10000.0,
+            sounds: [
+              {
+                name: `sounds/track/${key}`,
+                stream: true,
+                volume: 1,
+                load_on_low_memory: true
+              }
+            ]
+          };
+        }
+      }
+
+      zip.file("sounds/sound_definitions.json", JSON.stringify(sounds, null, 2));
+
+      zip.generateAsync({ type: "blob" }).then(content => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = `${packName}.mcpack`;
+        a.click();
+      });
+    }
+  </script>
+</body>
+</html>
